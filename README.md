@@ -92,6 +92,29 @@ uv run uvicorn restad.app:app --host 0.0.0.0 --port 8000
 
 Then open the interactive docs at <http://127.0.0.1:8000/docs>.
 
+### Run with uvx
+
+`uvx` runs restAD in a throwaway, isolated environment — no clone or manual
+install needed. The connection is still configured entirely through the
+environment.
+
+```bash
+# From PyPI (once restAD is published):
+MSAD_HOST=dc.example.com MSAD_BASE='dc=example,dc=com' \
+MSAD_USER=svc_reader MSAD_PASSWORD='s3cr3t' \
+  uvx restad
+
+# From a local checkout:
+uvx --from . restad
+
+# Straight from the Git repository (no clone):
+uvx --from git+https://github.com/matteoredaelli/restAD restad
+```
+
+All `MSAD_*` and `RESTAD_*` variables work exactly as above. Because `uvx`
+builds `msad` (and its `gssapi` C extension) in a fresh environment, the krb5
+development headers must be available on the host (see Install).
+
 ## Endpoints (all read-only)
 
 - `GET /health` — connectivity probe (connect/bind test).
