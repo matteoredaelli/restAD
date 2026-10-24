@@ -50,6 +50,7 @@ Authentication:
 | `RESTAD_HOST`        | HTTP bind host for the `restad` command (default `127.0.0.1`). |
 | `RESTAD_PORT`        | HTTP bind port (default `8000`).                           |
 | `RESTAD_LAZY_CONNECT`| If true, start even if the directory is unreachable at boot. |
+| `RESTAD_DOCS`        | Expose `/docs`, `/redoc` and `/openapi.json` (default `true`). Set to `false` to disable them. |
 
 ## Install
 

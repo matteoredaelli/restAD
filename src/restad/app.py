@@ -68,7 +68,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app() -> FastAPI:
-    """Build and configure the FastAPI application."""
+    """Build and configure the FastAPI application.
+
+    The interactive docs and schema routes (``/docs``, ``/redoc`` and
+    ``/openapi.json``) are enabled by default. Set ``RESTAD_DOCS=false`` to
+    disable all three (e.g. to hide the API surface in production).
+    """
+    docs_enabled = _env_flag("RESTAD_DOCS", default=True)
+
     app = FastAPI(
         title="restAD",
         version="0.1.0",
@@ -78,6 +85,9 @@ def create_app() -> FastAPI:
             "perform LDAP searches only; no write operations are exposed."
         ),
         lifespan=lifespan,
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None,
+        openapi_url="/openapi.json" if docs_enabled else None,
     )
 
     app.include_router(health.router)
@@ -89,7 +99,11 @@ def create_app() -> FastAPI:
 
     @app.get("/", tags=["health"], summary="Service metadata")
     def root() -> dict[str, str]:
-        return {"service": "restAD", "version": "0.1.0", "docs": "/docs"}
+        return {
+            "service": "restAD",
+            "version": "0.1.0",
+            "docs": "/docs" if docs_enabled else "disabled",
+        }
 
     return app
 

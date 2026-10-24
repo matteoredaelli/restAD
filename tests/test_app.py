@@ -53,6 +53,30 @@ def test_openapi_is_read_only() -> None:
     assert methods == {"GET"}, f"Non-GET operations exposed: {methods}"
 
 
+def test_docs_enabled_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("RESTAD_DOCS", raising=False)
+    for key, value in _FAKE_ENV.items():
+        monkeypatch.setenv(key, value)
+    with TestClient(create_app()) as client:
+        assert client.get("/openapi.json").status_code == 200
+        assert client.get("/docs").status_code == 200
+        assert client.get("/redoc").status_code == 200
+        assert client.get("/").json()["docs"] == "/docs"
+
+
+def test_docs_can_be_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    for key, value in _FAKE_ENV.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setenv("RESTAD_DOCS", "false")
+    with TestClient(create_app()) as client:
+        assert client.get("/openapi.json").status_code == 404
+        assert client.get("/docs").status_code == 404
+        assert client.get("/redoc").status_code == 404
+        # The API itself still works.
+        assert client.get("/").json()["docs"] == "disabled"
+        assert client.get("/users?limit=1").status_code == 503
+
+
 def test_lazy_startup_and_health(monkeypatch: pytest.MonkeyPatch) -> None:
     for key, value in _FAKE_ENV.items():
         monkeypatch.setenv(key, value)
