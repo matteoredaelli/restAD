@@ -6,7 +6,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 from msad import (
+    find_expired_accounts,
     find_inactive_users,
+    find_kerberos_preauth_not_required,
+    find_never_expiring_accounts,
+    find_not_delegated,
+    find_password_not_required,
     find_users,
     get_user,
     user_groups,
@@ -59,6 +64,81 @@ def inactive_users(
 ) -> EntriesResponse:
     """Enabled users whose last logon is older than ``days`` days."""
     entries = find_inactive_users(conn, base, days=days, include_never=include_never, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/never-expiring",
+    response_model=EntriesResponse,
+    summary="Users whose account never expires",
+)
+def never_expiring_accounts(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Users whose account (not password) never expires (accountExpires sentinel)."""
+    entries = find_never_expiring_accounts(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/expired",
+    response_model=EntriesResponse,
+    summary="Users with an expired account",
+)
+def expired_accounts(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Users whose ``accountExpires`` date is in the past."""
+    entries = find_expired_accounts(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/risks/password-not-required",
+    response_model=EntriesResponse,
+    summary="Risk: password not required",
+)
+def risk_password_not_required(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Users with the PASSWD_NOTREQD UAC flag (account may have no password)."""
+    entries = find_password_not_required(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/risks/kerberos-preauth-not-required",
+    response_model=EntriesResponse,
+    summary="Risk: Kerberos pre-auth not required",
+)
+def risk_kerberos_preauth_not_required(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Users not requiring Kerberos pre-authentication (AS-REP roasting exposure)."""
+    entries = find_kerberos_preauth_not_required(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/risks/not-delegated",
+    response_model=EntriesResponse,
+    summary="Risk: sensitive and not delegated",
+)
+def risk_not_delegated(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Accounts flagged sensitive-and-cannot-be-delegated."""
+    entries = find_not_delegated(conn, base, limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)
 
 

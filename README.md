@@ -118,13 +118,19 @@ development headers must be available on the host (see Install).
 ## Endpoints (all read-only)
 
 - `GET /health` — connectivity probe (connect/bind test).
-- **Users** — `GET /users` (by field), `/users/inactive`, `/users/{id}`,
-  `/users/{id}/groups`, `/users/{id}/status`, `/users/{id}/disabled`,
-  `/users/{id}/locked`.
-- **Computers** — `GET /computers` (by field), `/computers/stale`,
+- **Users** — `GET /users` (by field), `/users/inactive`, `/users/never-expiring`,
+  `/users/expired`, `/users/risks/password-not-required`,
+  `/users/risks/kerberos-preauth-not-required`, `/users/risks/not-delegated`,
+  `/users/{id}`, `/users/{id}/groups`, `/users/{id}/status`,
+  `/users/{id}/disabled`, `/users/{id}/locked`.
+- **Computers** — `GET /computers` (by field, optionally
+  `exclude_domain_controllers=true`), `/computers/stale`,
   `/computers/domain-controllers`, `/computers/os-summary`, `/computers/{id}`.
-- **Groups** — `GET /groups` (search), `/groups/empty`, `/groups/{id}`,
-  `/groups/{id}/members`, `/groups/{id}/members/{user}` (membership check).
+- **Groups** — `GET /groups` (search), `/groups/empty`,
+  `/groups/security` (optionally `scope=global|domain_local|universal`),
+  `/groups/{id}`, `/groups/{id}/members`, `/groups/{id}/members/{user}`
+  (membership check).
+- **Contacts** — `GET /contacts` (search by cn/mail/displayName).
 - **OUs** — `GET /ous` (find), `/ous/contents?ou_dn=...`, `/ous/{id}`.
 - **Audit** — `GET /audit/domain`, `/audit/password-policy`,
   `/audit/password-policy/violations`, `/audit/privileged-groups`,

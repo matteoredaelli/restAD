@@ -26,10 +26,21 @@ def list_computers(
     name: Annotated[str | None, Query(description="cn (computer name); * wildcards ok")] = None,
     dns: Annotated[str | None, Query(description="dNSHostName (FQDN); * wildcards ok")] = None,
     os: Annotated[str | None, Query(description="operatingSystem; * wildcards ok")] = None,
+    exclude_domain_controllers: Annotated[
+        bool, Query(description="Exclude domain controllers from the results")
+    ] = False,
     limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
 ) -> EntriesResponse:
     """Find computers matching one or more fields (all ANDed together)."""
-    entries = find_computers(conn, base, name=name, dns=dns, os=os, limit=limit)
+    entries = find_computers(
+        conn,
+        base,
+        name=name,
+        dns=dns,
+        os=os,
+        exclude_domain_controllers=exclude_domain_controllers,
+        limit=limit,
+    )
     return EntriesResponse(count=len(entries), entries=entries)
 
 

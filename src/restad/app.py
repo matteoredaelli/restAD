@@ -21,7 +21,7 @@ from fastapi import FastAPI
 from msad import connect
 
 from .config import ConfigError, resolve_domain_config
-from .routers import audit, computers, groups, health, ous, users
+from .routers import audit, computers, contacts, groups, health, ous, users
 
 logger = logging.getLogger("restad")
 
@@ -94,6 +94,7 @@ def create_app() -> FastAPI:
     app.include_router(users.router)
     app.include_router(computers.router)
     app.include_router(groups.router)
+    app.include_router(contacts.router)
     app.include_router(ous.router)
     app.include_router(audit.router)
 

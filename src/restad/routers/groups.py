@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
-from msad import find_groups, get_group, is_member, list_empty_groups
+from msad import find_groups, find_security_groups, get_group, is_member, list_empty_groups
 from msad.exceptions import MsadNotFoundError
 from msad.group import group_members
 
@@ -37,6 +37,25 @@ def empty_groups(
 ) -> EntriesResponse:
     """List groups that have no direct members."""
     entries = list_empty_groups(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/security", response_model=EntriesResponse, summary="List security groups")
+def security_groups(
+    conn: ConnDep,
+    base: BaseDep,
+    scope: Annotated[
+        str | None, Query(description="Restrict to global/domain_local/universal")
+    ] = None,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List security-enabled groups (as opposed to distribution groups)."""
+    try:
+        entries = find_security_groups(conn, base, scope=scope, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     return EntriesResponse(count=len(entries), entries=entries)
 
 
