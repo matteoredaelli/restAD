@@ -20,6 +20,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from msad import connect
 
+from . import __version__
 from .config import ConfigError, resolve_domain_config
 from .routers import audit, computers, contacts, groups, health, ous, users
 
@@ -78,7 +79,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="restAD",
-        version="0.1.0",
+        version=__version__,
         summary="Read-only REST interface over Active Directory (msad).",
         description=(
             "A read-only HTTP API in front of the msad library. All endpoints "
@@ -102,7 +103,7 @@ def create_app() -> FastAPI:
     def root() -> dict[str, str]:
         return {
             "service": "restAD",
-            "version": "0.1.0",
+            "version": __version__,
             "docs": "/docs" if docs_enabled else "disabled",
         }
 

@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# hatch-vcs generated version file (written at build time)
+src/restad/_version.py
