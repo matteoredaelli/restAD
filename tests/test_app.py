@@ -27,7 +27,7 @@ _FAKE_ENV = {
 
 
 def test_env_overrides_win() -> None:
-    cfg = resolve_domain_config(_FAKE_ENV)
+    cfg = resolve_domain_config(env=_FAKE_ENV)
     assert cfg.host == "dc.invalid.example"
     assert cfg.base == "dc=example,dc=com"
     assert cfg.port == 636
@@ -38,11 +38,11 @@ def test_env_overrides_win() -> None:
 
 def test_missing_required_fields_raise() -> None:
     with pytest.raises(ConfigError):
-        resolve_domain_config({"MSAD_CONFIG_FILE": "/nonexistent/none.toml"})
+        resolve_domain_config(env={"MSAD_CONFIG_FILE": "/nonexistent/none.toml"})
 
 
 def test_kerberos_when_no_credentials() -> None:
-    cfg = resolve_domain_config({"MSAD_HOST": "dc.x", "MSAD_BASE": "dc=x"})
+    cfg = resolve_domain_config(env={"MSAD_HOST": "dc.x", "MSAD_BASE": "dc=x"})
     assert cfg.uses_kerberos is True
 
 

@@ -31,6 +31,17 @@ Every operation must be a GET. This is enforced by
 OpenAPI schema. If you add a write-capable msad function, it does not belong
 here (restAD intentionally only exposes msad's read-only surface).
 
+## Config resolution is centralized in msad — don't reimplement it
+
+`src/restad/config.py` is a two-line re-export (`ConfigError =
+msad.MsadConfigError`, `resolve_domain_config = msad.resolve_domain_config`).
+The actual TOML + `MSAD_*` env-override logic lives in msad's
+`resolve_domain_config()` (shared with graphqlAD and mcpAD — see msad's
+AGENTS.md). If you need a new overridable connection field, add it in msad,
+not here. `app.py` calls `resolve_domain_config()` with no args (reads the
+real `os.environ`); tests pass a dict via the `env=` keyword (positional
+calls bind to `domain`, not `env` — don't drop the keyword).
+
 ## Kerberos is an optional extra
 
 `[project.optional-dependencies] kerberos = ["msad[kerberos]>=..."]` mirrors
