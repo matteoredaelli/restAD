@@ -14,7 +14,7 @@ dependencies = [
     "uvicorn[standard]>=0.32",
     "pydantic>=2.9",
     "pydantic-settings>=2.5",
-    "msad>=0.11.0",
+    "msad>=0.11.1",
 ]
 
 classifiers = [
@@ -32,7 +32,7 @@ classifiers = [
 # Kerberos (SASL/GSSAPI) authentication against AD. Needs system Kerberos dev
 # headers to build (see msad's README). Skip if you only use user/password.
 kerberos = [
-    "msad[kerberos]>=0.11.0",
+    "msad[kerberos]>=0.11.1",
 ]
 
 [project.urls]
