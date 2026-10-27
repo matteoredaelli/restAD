@@ -6,13 +6,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 from msad import (
+    find_admin_count_accounts,
     find_expired_accounts,
     find_inactive_users,
     find_kerberos_preauth_not_required,
+    find_must_change_password,
     find_never_expiring_accounts,
     find_not_delegated,
     find_password_not_required,
+    find_service_accounts,
     find_users,
+    find_users_without_email,
     get_user,
     user_groups,
 )
@@ -38,6 +42,9 @@ def list_users(
     mail: Annotated[str | None, Query(description="mail; * wildcards ok")] = None,
     sam: Annotated[str | None, Query(description="sAMAccountName; * wildcards ok")] = None,
     department: Annotated[str | None, Query(description="department; * wildcards ok")] = None,
+    city: Annotated[str | None, Query(description="l (office city); * wildcards ok")] = None,
+    state: Annotated[str | None, Query(description="st (state/province); * wildcards ok")] = None,
+    country: Annotated[str | None, Query(description="co (country name); * wildcards ok")] = None,
     limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
 ) -> EntriesResponse:
     """Find users matching one or more fields (all ANDed together)."""
@@ -49,6 +56,9 @@ def list_users(
         mail=mail,
         sam=sam,
         department=department,
+        city=city,
+        state=state,
+        country=country,
         limit=limit,
     )
     return EntriesResponse(count=len(entries), entries=entries)
@@ -139,6 +149,66 @@ def risk_not_delegated(
 ) -> EntriesResponse:
     """Accounts flagged sensitive-and-cannot-be-delegated."""
     entries = find_not_delegated(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/risks/service-accounts",
+    response_model=EntriesResponse,
+    summary="Risk: accounts with a Service Principal Name",
+)
+def risk_service_accounts(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Users with a servicePrincipalName set (Kerberoasting exposure)."""
+    entries = find_service_accounts(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/admin-count",
+    response_model=EntriesResponse,
+    summary="Users with adminCount=1",
+)
+def admin_count_accounts(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Users with adminCount=1 (current or stale protected-admin marker)."""
+    entries = find_admin_count_accounts(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/must-change-password",
+    response_model=EntriesResponse,
+    summary="Users who must change their password at next logon",
+)
+def must_change_password(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Enabled users with pwdLastSet=0 (must change password at next logon)."""
+    entries = find_must_change_password(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/without-email",
+    response_model=EntriesResponse,
+    summary="Users with no mail attribute",
+)
+def users_without_email(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Data-quality check: users with no ``mail`` attribute set."""
+    entries = find_users_without_email(conn, base, limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)
 
 

@@ -6,6 +6,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 from msad import (
+    find_recently_created,
+    find_recently_modified,
     get_domain_info,
     get_gpo,
     get_password_policy,
@@ -129,4 +131,42 @@ def fine_grained_password_policies(
 ) -> EntriesResponse:
     """List fine-grained password policies (PSOs)."""
     entries = list_fine_grained_password_policies(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/recently-modified",
+    response_model=EntriesResponse,
+    summary="Objects recently modified",
+)
+def recently_modified(
+    conn: ConnDep,
+    base: BaseDep,
+    days: Annotated[int, Query(ge=0, description="Modified within the last N days")] = 7,
+    object_class: Annotated[
+        str | None, Query(description="Restrict to one objectClass (user/group/computer/...)")
+    ] = None,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Objects whose whenChanged is within the last ``days`` days."""
+    entries = find_recently_modified(conn, base, days=days, object_class=object_class, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/recently-created",
+    response_model=EntriesResponse,
+    summary="Objects recently created",
+)
+def recently_created(
+    conn: ConnDep,
+    base: BaseDep,
+    days: Annotated[int, Query(ge=0, description="Created within the last N days")] = 7,
+    object_class: Annotated[
+        str | None, Query(description="Restrict to one objectClass (user/group/computer/...)")
+    ] = None,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Objects whose whenCreated is within the last ``days`` days."""
+    entries = find_recently_created(conn, base, days=days, object_class=object_class, limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)

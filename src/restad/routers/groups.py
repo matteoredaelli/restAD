@@ -5,7 +5,14 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
-from msad import find_groups, find_security_groups, get_group, is_member, list_empty_groups
+from msad import (
+    find_distribution_groups,
+    find_groups,
+    find_security_groups,
+    get_group,
+    is_member,
+    list_empty_groups,
+)
 from msad.exceptions import MsadNotFoundError
 from msad.group import group_members
 
@@ -56,6 +63,17 @@ def security_groups(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
         ) from exc
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/distribution", response_model=EntriesResponse, summary="List distribution groups")
+def distribution_groups(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List distribution groups (complement of security-enabled groups)."""
+    entries = find_distribution_groups(conn, base, limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
-from msad import find_ous, get_ou, get_ou_contents
+from msad import find_empty_ous, find_ous, get_ou, get_ou_contents
 
 from ..deps import BaseDep, ConnDep
 from ..models import EntriesResponse, EntryResponse
@@ -36,6 +36,17 @@ def ou_contents(
 ) -> EntriesResponse:
     """List the objects contained directly under an OU (by its DN)."""
     entries = get_ou_contents(conn, ou_dn, object_class=object_class, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/empty", response_model=EntriesResponse, summary="List empty OUs")
+def empty_ous(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List organizational units with no nested sub-OU."""
+    entries = find_empty_ous(conn, base, limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)
 
 
