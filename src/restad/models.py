@@ -26,6 +26,18 @@ class HealthResponse(BaseModel):
     error: str | None = Field(default=None, description="Error message when ok is false.")
 
 
+class WhoAmIResponse(BaseModel):
+    """Result of the RFC 4532 "Who Am I?" extended operation."""
+
+    authzid: str | None = Field(
+        default=None,
+        description=(
+            "The identity the connection is bound as, as reported by the "
+            "directory server (e.g. 'u:svc_reader' or a DN form)."
+        ),
+    )
+
+
 class EntryResponse(BaseModel):
     """A single LDAP entry (or null when not found)."""
 

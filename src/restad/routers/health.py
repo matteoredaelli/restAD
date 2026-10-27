@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from msad import check_connection
+from msad import check_connection, whoami
 
-from ..deps import ConfigDep
-from ..models import HealthResponse
+from ..deps import ConfigDep, ConnDep
+from ..models import HealthResponse, WhoAmIResponse
 
 router = APIRouter(tags=["health"])
 
@@ -28,3 +28,14 @@ def health(config: ConfigDep) -> HealthResponse:
     except Exception as exc:  # defensive: check_connection should not raise
         return HealthResponse(ok=False, target=target, auth=auth, error=str(exc))
     return HealthResponse(**status)
+
+
+@router.get("/whoami", response_model=WhoAmIResponse, summary="Identity bound as")
+def who_am_i(conn: ConnDep) -> WhoAmIResponse:
+    """Report the identity the shared connection is bound as.
+
+    Uses the RFC 4532 "Who Am I?" extended operation: the directory server
+    reports the identity it actually authenticated (works with Kerberos/
+    SASL-GSSAPI as well as simple user/password bind).
+    """
+    return WhoAmIResponse(authzid=whoami(conn))
