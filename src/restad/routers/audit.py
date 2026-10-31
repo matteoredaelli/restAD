@@ -14,6 +14,8 @@ from msad import (
     get_password_policy,
     get_password_policy_violations,
     get_privileged_groups,
+    get_site,
+    get_subnet,
     list_authorized_dhcp_servers,
     list_dfs_namespaces,
     list_dns_records,
@@ -116,6 +118,30 @@ def subnets(
     """List the AD subnets (CIDR -> site) from the Configuration NC."""
     entries = list_subnets(conn, base, limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/sites/{identifier}", response_model=EntryResponse, summary="Get a single site")
+def site(conn: ConnDep, base: BaseDep, identifier: str) -> EntryResponse:
+    """Return a single AD site matched by its cn (name)."""
+    entry = get_site(conn, base, identifier)
+    if entry is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Site not found")
+    return EntryResponse(entry=entry)
+
+
+@router.get(
+    "/subnets/{identifier:path}", response_model=EntryResponse, summary="Get a single subnet"
+)
+def subnet(conn: ConnDep, base: BaseDep, identifier: str) -> EntryResponse:
+    """Return a single AD subnet matched by its cn (CIDR, e.g. 10.20.0.0/16).
+
+    The identifier is a `:path` parameter so the ``/`` in the CIDR prefix is
+    accepted as part of the value.
+    """
+    entry = get_subnet(conn, base, identifier)
+    if entry is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subnet not found")
+    return EntryResponse(entry=entry)
 
 
 @router.get("/site-links", response_model=EntriesResponse, summary="AD site links")

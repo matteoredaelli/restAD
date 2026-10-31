@@ -7,6 +7,8 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 from msad import (
     find_computers,
+    find_computers_by_os,
+    find_disabled_computers,
     find_stale_computers,
     get_computer,
     list_domain_controllers,
@@ -56,6 +58,34 @@ def stale_computers(
 ) -> EntriesResponse:
     """Computers whose last logon is older than ``days`` days."""
     entries = find_stale_computers(conn, base, days=days, include_never=include_never, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/disabled", response_model=EntriesResponse, summary="Find disabled computers")
+def disabled_computers(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Disabled computer accounts (ACCOUNTDISABLE UAC flag)."""
+    entries = find_disabled_computers(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/by-os/{os}", response_model=EntriesResponse, summary="Find computers by OS")
+def computers_by_os(
+    conn: ConnDep,
+    base: BaseDep,
+    os: str,
+    exclude_domain_controllers: Annotated[
+        bool, Query(description="Exclude domain controllers from the results")
+    ] = False,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Computers whose operatingSystem matches ``os`` (``*`` wildcards ok)."""
+    entries = find_computers_by_os(
+        conn, base, os, exclude_domain_controllers=exclude_domain_controllers, limit=limit
+    )
     return EntriesResponse(count=len(entries), entries=entries)
 
 
