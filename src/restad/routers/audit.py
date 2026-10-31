@@ -6,6 +6,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 from msad import (
+    decode_entries,
     find_recently_created,
     find_recently_modified,
     get_domain_info,
@@ -13,10 +14,17 @@ from msad import (
     get_password_policy,
     get_password_policy_violations,
     get_privileged_groups,
+    list_authorized_dhcp_servers,
+    list_dfs_namespaces,
+    list_dns_records,
+    list_dns_zones,
     list_fine_grained_password_policies,
     list_fsmo_roles,
     list_gpos,
+    list_servers,
+    list_site_links,
     list_sites,
+    list_subnets,
     list_trusts,
 )
 
@@ -96,6 +104,102 @@ def sites(
 ) -> EntriesResponse:
     """List the AD sites from the Configuration NC."""
     entries = list_sites(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/subnets", response_model=EntriesResponse, summary="AD subnets")
+def subnets(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List the AD subnets (CIDR -> site) from the Configuration NC."""
+    entries = list_subnets(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/site-links", response_model=EntriesResponse, summary="AD site links")
+def site_links(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List AD site links (inter-site replication topology)."""
+    entries = list_site_links(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/servers", response_model=EntriesResponse, summary="Directory servers (DCs)")
+def servers(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List directory servers (DCs) from the Configuration NC, site-centric."""
+    entries = list_servers(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/dns-zones", response_model=EntriesResponse, summary="AD-integrated DNS zones")
+def dns_zones(
+    conn: ConnDep,
+    base: BaseDep,
+    zone_base: Annotated[
+        str | None, Query(description="Override the zone partition DN (e.g. ForestDnsZones)")
+    ] = None,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List AD-integrated DNS zones."""
+    entries = list_dns_zones(conn, base, zone_base=zone_base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/dns-zones/{zone}/records",
+    response_model=EntriesResponse,
+    summary="DNS records of a zone (decoded)",
+)
+def dns_records(
+    conn: ConnDep,
+    base: BaseDep,
+    zone: str,
+    zone_base: Annotated[
+        str | None, Query(description="Override the zone partition DN (e.g. ForestDnsZones)")
+    ] = None,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List the DNS records of an AD-integrated zone (dnsRecord decoded)."""
+    entries = list_dns_records(conn, base, zone, zone_base=zone_base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=decode_entries(entries))
+
+
+@router.get(
+    "/dhcp-servers",
+    response_model=EntriesResponse,
+    summary="Authorized DHCP servers",
+)
+def authorized_dhcp_servers(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List DHCP servers authorized in AD (authorization only, no scopes)."""
+    entries = list_authorized_dhcp_servers(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/dfs-namespaces",
+    response_model=EntriesResponse,
+    summary="Domain-based DFS namespaces",
+)
+def dfs_namespaces(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List domain-based DFS namespace roots."""
+    entries = list_dfs_namespaces(conn, base, limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)
 
 
