@@ -23,6 +23,8 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 from msad import (
     find_admin_count_accounts,
+    find_almost_locked_out,
+    find_credentials_in_description,
     find_expired_accounts,
     find_inactive_users,
     find_kerberos_preauth_not_required,
@@ -31,6 +33,7 @@ from msad import (
     find_not_delegated,
     find_password_not_required,
     find_service_accounts,
+    find_shadow_credentials,
     find_users,
     find_users_without_email,
     get_user,
@@ -225,6 +228,58 @@ def users_without_email(
 ) -> EntriesResponse:
     """Data-quality check: users with no ``mail`` attribute set."""
     entries = find_users_without_email(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/risks/almost-locked-out",
+    response_model=EntriesResponse,
+    summary="Users close to the lockout threshold",
+)
+def almost_locked_out(
+    conn: ConnDep,
+    base: BaseDep,
+    threshold: Annotated[
+        int, Query(ge=0, description="Minimum badPwdCount to flag (default 4)")
+    ] = 4,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Enabled users whose badPwdCount is at or above ``threshold``."""
+    entries = find_almost_locked_out(conn, base, threshold=threshold, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/risks/credentials-in-description",
+    response_model=EntriesResponse,
+    summary="Users with a possible credential in their description",
+)
+def credentials_in_description(
+    conn: ConnDep,
+    base: BaseDep,
+    keyword: Annotated[
+        list[str] | None,
+        Query(description="Substrings to look for (default: pass, pwd); repeatable"),
+    ] = None,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Users whose ``description`` may contain a plaintext credential."""
+    entries = find_credentials_in_description(conn, base, keywords=keyword, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/risks/shadow-credentials",
+    response_model=EntriesResponse,
+    summary="Users with a msDS-KeyCredentialLink (Shadow Credentials)",
+)
+def risk_shadow_credentials_users(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Users with a populated ``msDS-KeyCredentialLink`` (Shadow Credentials)."""
+    entries = find_shadow_credentials(conn, base, object_class="user", limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)
 
 

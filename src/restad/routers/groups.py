@@ -22,6 +22,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 from msad import (
+    find_admin_count_groups,
     find_distribution_groups,
     find_groups,
     find_security_groups,
@@ -90,6 +91,17 @@ def distribution_groups(
 ) -> EntriesResponse:
     """List distribution groups (complement of security-enabled groups)."""
     entries = find_distribution_groups(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/admin-count", response_model=EntriesResponse, summary="Groups with adminCount=1")
+def admin_count_groups(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Groups with adminCount=1 (current or stale protected-group marker)."""
+    entries = find_admin_count_groups(conn, base, limit=limit)
     return EntriesResponse(count=len(entries), entries=entries)
 
 

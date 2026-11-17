@@ -25,6 +25,8 @@ from msad import (
     find_computers,
     find_computers_by_os,
     find_disabled_computers,
+    find_obsolete_os_computers,
+    find_shadow_credentials,
     find_stale_computers,
     get_computer,
     list_domain_controllers,
@@ -129,6 +131,36 @@ def os_summary(
     """Summarize computer accounts grouped by operatingSystem."""
     items = summarize_computer_os(conn, base, limit=limit)
     return OsSummaryResponse(count=len(items), items=items)
+
+
+@router.get(
+    "/obsolete-os",
+    response_model=EntriesResponse,
+    summary="Find computers running an end-of-life Windows version",
+)
+def obsolete_os_computers(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Computers running a commonly-cited end-of-life Windows version."""
+    entries = find_obsolete_os_computers(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/risks/shadow-credentials",
+    response_model=EntriesResponse,
+    summary="Computers with a msDS-KeyCredentialLink (Shadow Credentials)",
+)
+def risk_shadow_credentials_computers(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """Computers with a populated ``msDS-KeyCredentialLink`` (Shadow Credentials)."""
+    entries = find_shadow_credentials(conn, base, object_class="computer", limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
 
 
 @router.get("/{identifier}", response_model=EntryResponse, summary="Get a single computer")
