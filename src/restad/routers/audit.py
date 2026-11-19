@@ -31,6 +31,7 @@ from msad import (
     get_password_policy,
     get_password_policy_violations,
     get_privileged_groups,
+    get_rootdse_info,
     get_site,
     get_subnet,
     list_authorized_dhcp_servers,
@@ -140,6 +141,12 @@ def replication_conflicts(
 def first_look_overview(conn: ConnDep, base: BaseDep) -> EntryResponse:
     """One-call overview: domain, policy, FSMO, DCs, sites, trusts, replication, warnings."""
     return EntryResponse(entry=first_look(conn, base))
+
+
+@router.get("/rootdse", response_model=EntryResponse, summary="rootDSE of the answering DC")
+def rootdse(conn: ConnDep) -> EntryResponse:
+    """Naming contexts, functional levels and capabilities of the DC answering this connection."""
+    return EntryResponse(entry=get_rootdse_info(conn))
 
 
 @router.get("/trusts", response_model=EntriesResponse, summary="Domain trusts")

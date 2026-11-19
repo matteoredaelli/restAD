@@ -14,7 +14,7 @@ dependencies = [
     "uvicorn[standard]>=0.32",
     "pydantic>=2.9",
     "pydantic-settings>=2.5",
-    "msad>=0.17.1",
+    "msad>=0.18.0",
 ]
 
 classifiers = [
@@ -35,7 +35,7 @@ classifiers = [
 # real SSO for a domain-joined user -- see msad's README). Skip this extra
 # if you only use user/password.
 kerberos = [
-    "msad[kerberos]>=0.17.1",
+    "msad[kerberos]>=0.18.0",
 ]
 
 [project.urls]

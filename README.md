@@ -150,7 +150,7 @@ wheel instead.
 - **Audit** — `GET /audit/domain`, `/audit/password-policy`,
   `/audit/password-policy/violations`, `/audit/privileged-groups`,
   `/audit/fsmo-roles`, `/audit/replication-connections`,
-  `/audit/replication-conflicts`, `/audit/first-look`, `/audit/trusts`, `/audit/sites`, `/audit/gpos`,
+  `/audit/replication-conflicts`, `/audit/first-look`, `/audit/rootdse`, `/audit/trusts`, `/audit/sites`, `/audit/gpos`,
   `/audit/gpos/{id}`, `/audit/fine-grained-password-policies`.
 
 ## Notes
