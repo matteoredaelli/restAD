@@ -25,6 +25,7 @@ from msad import (
     decode_entries,
     find_recently_created,
     find_recently_modified,
+    first_look,
     get_domain_info,
     get_gpo,
     get_password_policy,
@@ -39,6 +40,8 @@ from msad import (
     list_fine_grained_password_policies,
     list_fsmo_roles,
     list_gpos,
+    list_replication_conflicts,
+    list_replication_connections,
     list_servers,
     list_site_links,
     list_sites,
@@ -101,6 +104,42 @@ def fsmo_roles(conn: ConnDep, base: BaseDep) -> EntriesResponse:
     """Report the owner of each of the five FSMO roles."""
     entries = list_fsmo_roles(conn, base)
     return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/replication-connections",
+    response_model=EntriesResponse,
+    summary="AD replication topology (nTDSConnection)",
+)
+def replication_connections(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List replication connections with decoded source/destination DC and site."""
+    entries = list_replication_connections(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get(
+    "/replication-conflicts",
+    response_model=EntriesResponse,
+    summary="Replication-conflict (CNF:) objects",
+)
+def replication_conflicts(
+    conn: ConnDep,
+    base: BaseDep,
+    limit: Annotated[int, Query(ge=0, description="Max entries (0 = no limit)")] = 0,
+) -> EntriesResponse:
+    """List objects renamed by AD after a replication conflict."""
+    entries = list_replication_conflicts(conn, base, limit=limit)
+    return EntriesResponse(count=len(entries), entries=entries)
+
+
+@router.get("/first-look", response_model=EntryResponse, summary="Domain/forest overview")
+def first_look_overview(conn: ConnDep, base: BaseDep) -> EntryResponse:
+    """One-call overview: domain, policy, FSMO, DCs, sites, trusts, replication, warnings."""
+    return EntryResponse(entry=first_look(conn, base))
 
 
 @router.get("/trusts", response_model=EntriesResponse, summary="Domain trusts")

@@ -149,7 +149,8 @@ wheel instead.
 - **OUs** — `GET /ous` (find), `/ous/contents?ou_dn=...`, `/ous/{id}`.
 - **Audit** — `GET /audit/domain`, `/audit/password-policy`,
   `/audit/password-policy/violations`, `/audit/privileged-groups`,
-  `/audit/fsmo-roles`, `/audit/trusts`, `/audit/sites`, `/audit/gpos`,
+  `/audit/fsmo-roles`, `/audit/replication-connections`,
+  `/audit/replication-conflicts`, `/audit/first-look`, `/audit/trusts`, `/audit/sites`, `/audit/gpos`,
   `/audit/gpos/{id}`, `/audit/fine-grained-password-policies`.
 
 ## Notes
